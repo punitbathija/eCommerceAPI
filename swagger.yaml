@@ -1,0 +1,58 @@
+openapi: "3.0.0"
+info:
+  title: An API to power any E-commerce store
+  description: Becoming a backend pro developer
+  version: 1.1.0
+  contact:
+    email: punit644@gmail.com
+    url: "https://punit-bathija.netlify.app"
+
+# servers:
+#   - url: "https://localhost:4000/api/v1"
+#     description: for local host - secured
+#   - url: "http://localhost:4000/api/v1"
+#     description: for local host - unsecured
+
+servers:
+  - url: "{protocol}://localhost:4000/api/{version}"
+    description: for local host
+    variables:
+      version:
+        enum:
+          - v1
+          - v2
+        default: v1
+      protocol:
+        enum:
+          - http
+          - https
+        default: http
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: token
+    BearerAuth:
+      type: http
+      scheme: bearer
+
+paths:
+  /dummy:
+    get:
+      tags:
+        - Home Dummy
+      summary: returns a string which says that you are welcome to a dummy URL
+      responses:
+        200:
+          description: All went well Success!
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "My API"
+        400:
+          description: Bad Request
+        500:
+          description: Internal server error
