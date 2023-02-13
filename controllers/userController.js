@@ -7,6 +7,7 @@ const fileUpload = require("express-fileupload");
 const cloudinary = require("cloudinary");
 
 exports.signup = bigPromise(async (req, res, next) => {
+  const { name, email, password } = req.body;
   // Convey to frontend engineer that the filename should be photo
   let result;
 
@@ -19,8 +20,6 @@ exports.signup = bigPromise(async (req, res, next) => {
     });
   }
 
-  const { name, email, password } = req.body;
-
   if (!email || !name || !password) {
     return next(new CustomError("Please enter email, name & password", 400));
   }
@@ -30,7 +29,7 @@ exports.signup = bigPromise(async (req, res, next) => {
     email,
     password,
     photo: {
-      id: result.id,
+      id: result.public_id,
       secure_url: result.secure_url,
     },
   });
