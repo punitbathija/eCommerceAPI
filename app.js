@@ -24,6 +24,9 @@ app.use(
   })
 );
 
+// temporary check for image
+app.set("view engine", "ejs");
+
 // morgan middleware
 app.use(morgan("tiny"));
 
@@ -34,6 +37,11 @@ const user = require("./routes/user");
 // router middleware
 app.use("/api/v1", home);
 app.use("/api/v1", user);
+
+// temporary check for image handling
+app.get("/signup", (req, res) => {
+  res.render("signup");
+});
 
 // exporting app.js
 module.exports = app;
