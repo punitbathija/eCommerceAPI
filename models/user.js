@@ -28,9 +28,11 @@ const userSchema = new mongoose.Schema({
   photo: {
     id: {
       type: String,
+      required: true,
     },
     secure_url: {
       type: String,
+      required: true,
     },
   },
 
@@ -68,8 +70,8 @@ userSchema.methods.validatePassword = async function (userPassword) {
 
 // Create and return the JWT token
 
-userSchema.methods.getJwtToken = function () {
-  return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
+userSchema.methods.getJwtToken = async function () {
+  return await jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRY,
   });
 };
