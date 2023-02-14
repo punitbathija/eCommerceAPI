@@ -7,24 +7,25 @@ const crypto = require("crypto");
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: [true, "Please enter a name"],
-    maxlength: [40, "Name exceeds the maximum"],
+    required: [true, "Please provide a name"],
+    maxlength: [40, "Name should be under 40 characters"],
   },
-
   email: {
     type: String,
-    required: [true, "Please enter an email id"],
-    validate: [validator.isEmail, "Please enter an valid email id"],
+    required: [true, "Please provide an email"],
+    validate: [validator.isEmail, "Please enter email in correct format"],
     unique: true,
   },
-
   password: {
     type: String,
-    required: [true, "Please enter a password"],
-    minlength: [6, "Please enter a password with more than six characters"],
+    required: [true, "Please provide a password"],
+    minlength: [6, "password should be atleast 6 char"],
     select: false,
   },
-
+  role: {
+    type: String,
+    default: "user",
+  },
   photo: {
     id: {
       type: String,
@@ -35,59 +36,49 @@ const userSchema = new mongoose.Schema({
       required: true,
     },
   },
-
-  role: {
-    type: String,
-    default: "user",
-  },
-
-  forgotPasswordToken: {
-    type: String,
-  },
-
-  forgotPasswordTokenExpiry: {
-    type: Date,
-  },
-
+  forgotPasswordToken: String,
+  forgotPasswordExpiry: Date,
   createdAt: {
     type: Date,
-    default: Date.now(),
+    default: Date.now,
   },
 });
 
-// Encrypting password before saving the password onto the database
-
+//encrypt password before save - HOOKS
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+  if (!this.isModified("password")) {
+    return next();
+  }
   this.password = await bcrypt.hash(this.password, 10);
 });
 
-// Validating the password with the password recieved from user
-
-userSchema.methods.validatePassword = async function (userPassword) {
-  return await bcrypt.compare(userPassword, this.password);
+// validate the password with passed on user password
+userSchema.methods.isValidatedPassword = async function (usersendPassword) {
+  return await bcrypt.compare(usersendPassword, this.password);
 };
 
-// Create and return the JWT token
-
-userSchema.methods.getJWTToken = async function () {
-  return await jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
+//create and return jwt token
+userSchema.methods.getJwtToken = function () {
+  return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRY,
   });
 };
 
-// Generate forgot password token (string)
+//generate forgot password token (string)
+userSchema.methods.getForgotPasswordToken = function () {
+  // generate a long and randomg string
+  const forgotToken = crypto.randomBytes(20).toString("hex");
 
-userSchema.methods.getForgotPassword = function () {
-  const forgotPasswordToken = crypto.randomBytes(20).toString("hex");
-
-  this.forgotPassword = crypto
+  // getting a hash - make sure to get a hash on backend
+  this.forgotPasswordToken = crypto
     .createHash("sha256")
-    .update(forgotPasswordToken)
+    .update(forgotToken)
     .digest("hex");
 
-  this.forgotPasswordTokenExpiry = Date.now() + 20 * 60 * 1000;
-  return forgotPasswordToken;
+  //time of token
+  this.forgotPasswordExpiry = Date.now() + 20 * 60 * 1000;
+
+  return forgotToken;
 };
 
 module.exports = mongoose.model("User", userSchema);

@@ -9,26 +9,25 @@ const mailHelper = require("../utils/emailHelper");
 const crypto = require("crypto");
 
 exports.signup = bigPromise(async (req, res, next) => {
-  const { name, email, password } = req.body;
-  // Convey to frontend engineer that the filename should be photo
-  let result;
+  //let result;
 
   if (!req.files) {
-    return next(new CustomError("Please upload an image to continue", 400));
+    return next(new CustomError("photo is required for signup", 400));
   }
 
-  if (req.files) {
-    let file = req.files.photo;
-    result = await cloudinary.v2.uploader.upload(file.tempFilePath, {
-      folder: "users",
-      width: 150,
-      crop: "scale",
-    });
-  }
+  const { name, email, password } = req.body;
 
   if (!email || !name || !password) {
-    return next(new CustomError("Please enter email, name & password", 400));
+    return next(new CustomError("Name, email and password are required", 400));
   }
+
+  let file = req.files.photo;
+
+  const result = await cloudinary.v2.uploader.upload(file.tempFilePath, {
+    folder: "users",
+    width: 150,
+    crop: "scale",
+  });
 
   const user = await User.create({
     name,
@@ -46,42 +45,47 @@ exports.signup = bigPromise(async (req, res, next) => {
 exports.login = bigPromise(async (req, res, next) => {
   const { email, password } = req.body;
 
-  // check if email and password are present
+  // check for presence of email and password
   if (!email || !password) {
-    return next(new CustomError("Please enter email & password", 400));
+    return next(new CustomError("please provide email and password", 400));
   }
 
-  // comparing email and password
+  // get user from DB
   const user = await User.findOne({ email }).select("+password");
 
-  // if user does not exsist
+  // if user not found in DB
   if (!user) {
     return next(
-      new CustomError("Please enter registered email & password", 400)
+      new CustomError("Email or password does not match or exist", 400)
     );
   }
 
-  const isPasswordCorrect = await user.validatePassword(password);
+  // match the password
+  const isPasswordCorrect = await user.isValidatedPassword(password);
 
-  // if password or email is incorrect
+  //if password do not match
   if (!isPasswordCorrect) {
-    return next(new CustomError("Please enter correct email & password", 400));
+    return next(
+      new CustomError("Email or password does not match or exist", 400)
+    );
   }
-  // if everything goes well we send the token
+
+  // if all goes good and we send the token
   cookieToken(user, res);
 });
 
 exports.logout = bigPromise(async (req, res, next) => {
+  //clear the cookie
   res.cookie("token", null, {
     expires: new Date(Date.now()),
     httpOnly: true,
   });
+  //send JSON response for success
   res.status(200).json({
-    success: true,
-    message: "Successfully Logged Out",
+    succes: true,
+    message: "Logout success",
   });
 });
-
 exports.forgotPassword = bigPromise(async (req, res, next) => {
   // collect email
   const { email } = req.body;
@@ -91,11 +95,11 @@ exports.forgotPassword = bigPromise(async (req, res, next) => {
 
   // if user not found in database
   if (!user) {
-    return next(new CustomError("Email not found as registerd", 400));
+    return next(new CustomError("Email not found as registered", 400));
   }
 
-  // get token from user model methods
-  const forgotToken = user.getForgotPassword();
+  //get token from user model methods
+  const forgotToken = user.getForgotPasswordToken();
 
   // save user fields in DB
   await user.save({ validateBeforeSave: false });
@@ -104,35 +108,42 @@ exports.forgotPassword = bigPromise(async (req, res, next) => {
   const myUrl = `${req.protocol}://${req.get(
     "host"
   )}/api/v1/password/reset/${forgotToken}`;
+
   // craft a message
-  const message = `Copy paste this link in your url and hit enter \n\n ${myUrl}`;
+  const message = `Copy paste this link in your URL and hit enter \n\n ${myUrl}`;
 
   // attempt to send email
   try {
     await mailHelper({
       email: user.email,
-      subject: "Password reset email",
+      subject: "LCO TStore - Password reset email",
       message,
     });
-    // json response if email is success
+
+    // json reponse if email is success
     res.status(200).json({
-      success: true,
+      succes: true,
       message: "Email sent successfully",
     });
   } catch (error) {
     // reset user fields if things goes wrong
     user.forgotPasswordToken = undefined;
-    user.forgotPasswordTokenExpiry = undefined;
+    user.forgotPasswordExpiry = undefined;
     await user.save({ validateBeforeSave: false });
+
+    // send error response
     return next(new CustomError(error.message, 500));
   }
 });
 
 exports.passwordReset = bigPromise(async (req, res, next) => {
+  //get token from params
   const token = req.params.token;
 
+  // hash the token as db also stores the hashed version
   const encryToken = crypto.createHash("sha256").update(token).digest("hex");
 
+  // find user based on hased on token and time in future
   const user = await User.findOne({
     encryToken,
     forgotPasswordExpiry: { $gt: Date.now() },
@@ -142,16 +153,21 @@ exports.passwordReset = bigPromise(async (req, res, next) => {
     return next(new CustomError("Token is invalid or expired", 400));
   }
 
+  // check if password and conf password matched
   if (req.body.password !== req.body.confirmPassword) {
     return next(
       new CustomError("password and confirm password do not match", 400)
     );
   }
 
+  // update password field in DB
   user.password = req.body.password;
-  user.forgotPasswordToken = undefined;
-  user.forgotPasswordTokenExpiry = undefined;
 
+  // reset token fields
+  user.forgotPasswordToken = undefined;
+  user.forgotPasswordExpiry = undefined;
+
+  // save the user
   await user.save();
 
   // send a JSON response OR send token
