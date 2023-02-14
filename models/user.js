@@ -70,7 +70,7 @@ userSchema.methods.validatePassword = async function (userPassword) {
 
 // Create and return the JWT token
 
-userSchema.methods.getJwtToken = async function () {
+userSchema.methods.getJWTToken = async function () {
   return await jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRY,
   });
@@ -80,6 +80,12 @@ userSchema.methods.getJwtToken = async function () {
 
 userSchema.methods.getForgotPassword = function () {
   const forgotPasswordToken = crypto.randomBytes(20).toString("hex");
+
+  this.forgotPassword = crypto
+    .createHash("sha256")
+    .update(forgotPasswordToken)
+    .digest("hex");
+
   this.forgotPasswordTokenExpiry = Date.now() + 20 * 60 * 1000;
   return forgotPasswordToken;
 };
