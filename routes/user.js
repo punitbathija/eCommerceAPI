@@ -10,6 +10,7 @@ const {
   getLoggedInUserDetails,
   changePassword,
   updateUserDetails,
+  adminAllUser,
 } = require("../controllers/userController");
 const { isLoggedIn } = require("../middlewares/user");
 
@@ -22,4 +23,5 @@ router.route("/userdashboard").get(isLoggedIn, getLoggedInUserDetails);
 router.route("/password/update").post(isLoggedIn, changePassword);
 router.route("/userdashboard/update").post(isLoggedIn, updateUserDetails);
 
+router.route("/admin/users").get(isLoggedIn, adminAllUser);
 module.exports = router;

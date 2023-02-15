@@ -231,7 +231,6 @@ exports.updateUserDetails = bigPromise(async (req, res, next) => {
       secure_url: result.secure_url,
     };
   }
-
   const user = await User.findByIdAndUpdate(req.user.id, newData, {
     new: true,
     runValidators: true,
@@ -240,5 +239,13 @@ exports.updateUserDetails = bigPromise(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
+  });
+});
+
+exports.adminAllUser = bigPromise(async (req, res, next) => {
+  const users = await User.find();
+  res.status(200).json({
+    succes: true,
+    users,
   });
 });
