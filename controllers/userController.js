@@ -288,3 +288,21 @@ exports.adminUpdateOneUserDetails = bigPromise(async (req, res, next) => {
     user,
   });
 });
+
+exports.adminDeleteOne = bigPromise(async (req, res, next) => {
+  const user = await User.findById(req.params.id);
+  if (!user) {
+    next(new CustomError("No user found", 404));
+  }
+
+  const imageId = user.photo.id;
+
+  await cloudinary.v2.uploader.destroy(imageId);
+
+  await user.remove();
+
+  res.status(200).json({
+    success: true,
+    user,
+  });
+});
