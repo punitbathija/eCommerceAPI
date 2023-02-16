@@ -44,6 +44,7 @@ exports.addProduct = bigPromise(async (req, res, next) => {
     product,
   });
 });
+
 exports.getAllProducts = bigPromise(async (req, res, next) => {
   const resultPerPage = 8;
   const countProduct = await Product.countDocuments();
@@ -64,5 +65,18 @@ exports.getAllProducts = bigPromise(async (req, res, next) => {
     products,
     filterProducts,
     countProduct,
+  });
+});
+
+exports.adminGetAllProducts = bigPromise(async (req, res, next) => {
+  const products = await Product.find();
+
+  if (!products) {
+    next(new CustomError("No products ffound in the inventory"));
+  }
+
+  res.status(200).json({
+    success: true,
+    products,
   });
 });
