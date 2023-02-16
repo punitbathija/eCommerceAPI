@@ -48,14 +48,16 @@ exports.getAllProducts = bigPromise(async (req, res, next) => {
   const resultPerPage = 8;
   const countProduct = await Product.countDocuments();
 
-  const products = new productFilter(Product.find(), req.query)
+  const productsObj = new productFilter(Product.find(), req.query)
     .search()
     .filter();
 
+  let products = await productsObj.base.clone();
+
   const filterProducts = products.length;
 
-  products.pager(resultPerPage);
-  products = await products.base;
+  productsObj.pager(resultPerPage);
+  products = await productsObj.base;
 
   res.status(200).json({
     success: true,
