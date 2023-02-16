@@ -13,14 +13,15 @@ exports.productDummy = async (req, res) => {
 
 exports.addProduct = bigPromise(async (req, res, next) => {
   let imageArray = [];
+
   if (!req.files) {
     return next(new CustomError("images are required", 401));
   }
 
   if (req.files) {
-    for (i = 0; i < req.files.photos.length; i++) {
+    for (let index = 0; index < req.files.photos.length; index++) {
       let result = await cloudinary.v2.uploader.upload(
-        req.files.photos[i].tempPathFile,
+        req.files.photos[index].tempFilePath,
         {
           folder: "products",
         }
@@ -36,14 +37,13 @@ exports.addProduct = bigPromise(async (req, res, next) => {
   req.body.photos = imageArray;
   req.body.user = req.user.id;
 
-  const product = Product.create(req.body);
+  const product = await Product.create(req.body);
 
-  req.status(200).json({
+  res.status(200).json({
     success: true,
     product,
   });
 });
-
 exports.getAllProducts = bigPromise(async (req, res, next) => {
   const resultPerPage = 8;
   const countProduct = await Product.countDocuments();
