@@ -80,3 +80,16 @@ exports.adminGetAllProducts = bigPromise(async (req, res, next) => {
     products,
   });
 });
+
+exports.getSingleProduct = bigPromise(async (req, res, next) => {
+  const product = await Product.findById(req.params.id);
+
+  if (!product) {
+    return next(new CustomError("There are no matching products", 401));
+  }
+
+  res.status(200).json({
+    success: true,
+    product,
+  });
+});
