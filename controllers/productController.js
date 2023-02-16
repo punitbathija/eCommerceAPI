@@ -2,6 +2,7 @@ const Product = require("../models/product");
 const bigPromise = require("../middlewares/bigPromise");
 const cloudinary = require("cloudinary");
 const CustomError = require("../utils/customError");
+const productFilter = require("../utils/productFilter");
 
 exports.productDummy = async (req, res) => {
   res.status(200).json({
@@ -40,5 +41,26 @@ exports.addProduct = bigPromise(async (req, res, next) => {
   req.status(200).json({
     success: true,
     product,
+  });
+});
+
+exports.getAllProducts = bigPromise(async (req, res, next) => {
+  const resultPerPage = 8;
+  const countProduct = await Product.countDocuments();
+
+  const products = new productFilter(Product.find(), req.query)
+    .search()
+    .filter();
+
+  const filterProducts = products.length;
+
+  products.pager(resultPerPage);
+  products = await products.base;
+
+  res.status(200).json({
+    success: true,
+    products,
+    filterProducts,
+    countProduct,
   });
 });

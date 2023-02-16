@@ -5,7 +5,7 @@ class productFilter {
   }
 
   search() {
-    const searchword = this.bigQ.search
+    const searchquery = this.bigQ.search
       ? {
           name: {
             $regex: this.bigQ.search,
@@ -14,7 +14,7 @@ class productFilter {
         }
       : {};
 
-    this.base = this.base.find({ ...searchword });
+    this.base = this.base.find({ ...searchquery });
     return this;
   }
 
