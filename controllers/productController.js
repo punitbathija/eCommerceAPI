@@ -142,3 +142,22 @@ exports.adminMdoifyProduct = bigPromise(async (req, res, next) => {
     });
   }
 });
+
+exports.adminDeleteProduct = bigPromise(async (req, res, next) => {
+  let product = await Product.findById(req.params.id);
+
+  if (!product) {
+    return next(new CustomError("There are no matching products", 401));
+  }
+  for (let index = 0; index < product.photos.length; index++) {
+    await cloudinary.v2.uploader.destroy(product.photos[index].id);
+  }
+
+  await product.remove();
+
+  res.status(200).json({
+    product,
+    success: true,
+    message: "The following product was Deleted",
+  });
+});
