@@ -79,7 +79,7 @@ const orderSchema = new mongoose.Schema({
     required: true,
     default: "processing",
     enum: {
-      values: ["processing", "canclled", "completed"],
+      values: ["processing", "cancelled", "delivered"],
       message:
         "Please select categories from (short-sleeves, long-sleeves, polo-shirts, hoodies, sweat-shirts)",
     },
