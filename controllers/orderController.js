@@ -44,3 +44,29 @@ exports.getSingleOrder = bigPromise(async (req, res, next) => {
     order,
   });
 });
+
+exports.getLoggedinUserOrders = bigPromise(async (req, res, next) => {
+  const order = await Order.find({ user: req.user._id });
+
+  if (!order) {
+    return next(new CustomError("Please enter correct order id", 401));
+  }
+
+  res.status(200).json({
+    success: true,
+    order,
+  });
+});
+
+exports.adminGetAllOrders = bigPromise(async (req, res, next) => {
+  const order = await Order.find().populate("user", "name email");
+
+  if (!order) {
+    return next(new CustomError("Please enter correct order id", 401));
+  }
+
+  res.status(200).json({
+    success: true,
+    order,
+  });
+});
