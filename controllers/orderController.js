@@ -1,6 +1,7 @@
 const Order = require("../models/order");
 const Product = require("../models/product");
 const bigPromise = require("../middlewares/bigPromise");
+const CustomError = require("../utils/customError");
 
 exports.createOrder = bigPromise(async (req, res, next) => {
   const {
@@ -21,6 +22,22 @@ exports.createOrder = bigPromise(async (req, res, next) => {
     totalAmount,
     user: req.user._id,
   });
+
+  res.status(200).json({
+    success: true,
+    order,
+  });
+});
+
+exports.getSingleOrder = bigPromise(async (req, res, next) => {
+  const order = await Order.findById(req.params.id).populate(
+    "user",
+    "name email"
+  );
+
+  if (!order) {
+    return next(new CustomError("Please enter correct order id", 401));
+  }
 
   res.status(200).json({
     success: true,
