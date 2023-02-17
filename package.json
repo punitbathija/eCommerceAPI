@@ -23,6 +23,7 @@
     "nodemailer": "^6.9.1",
     "stripe": "^11.10.0",
     "swagger-ui-express": "^4.6.0",
+    "uuid": "^9.0.0",
     "validator": "^13.9.0",
     "yamljs": "^0.3.0"
   },
